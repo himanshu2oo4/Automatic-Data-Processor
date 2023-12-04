@@ -1,35 +1,19 @@
 import pandas as pd 
 import time 
 import numpy as np 
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-from sklearn.linear_model import LinearRegression
-from sklearn.linear_model import Lasso 
-from sklearn.linear_model import Ridge
-from sklearn.svm import SVR 
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score , mean_squared_error
 import seaborn as sns 
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LinearRegression , Lasso , Ridge , LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVR, SVC
+from sklearn.tree import DecisionTreeRegressor , DecisionTreeClassifier
+from sklearn.ensemble import RandomForestRegressor , RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score , mean_squared_error , classification_report , accuracy_score, confusion_matrix , ConfusionMatrixDisplay
 
-# def nullRemoval(df) :
-#     print(f'null values in your data : \n{df.isna().sum()}')
-#     ans = input('Wanna remove all null value records ? Y/n :  ')
-    
-#     for i in range(1,10):
-#         print('_' * i , end= ' ', flush = True)
-#         time.sleep(0.10)
-#     if ans in ('Y' , 'y'):
-#         df.dropna(inplace = True)
-#         print('\n')
-#         print(df.isna().sum())
-#     else : 
-#         print('Removing the rows which are completely full of null values !')
-#         df.dropna(how = 'all' , inplace = True )
-#         print('\n')
-#         print(df.isna().sum())
+
 
 
 
@@ -69,8 +53,9 @@ def dimensionalityReduction(df):
  
 
 def ModelSelection(df):
-    inpt = input('Tell me the type of your data means Regression or Classification')
-    if inpt =='Regression':
+    answers = {}
+    inpt = input('Tell me the type of your data means Regression or Classification : ')
+    if inpt in ('Regression' , 'regression'):
         models = {
             'Linear Regression' : LinearRegression(),
             'Lasso Regression' : Lasso(),
@@ -88,9 +73,77 @@ def ModelSelection(df):
             y_pred = model.predict(x_test)
             r2Score = r2_score(y_test  , y_pred)
             mse = mean_squared_error(y_test , y_pred)
+            answers[model_name] = r2Score
             print(f'\nPredicted values : {y_pred}')
             print(f'Model evaluation')
             print(f'R2 score : {r2Score} \nMean_squared_error : {mse}')
+
+        print(f'Acc. to me your best model is : {max(answers.items(), key=lambda x: x[1])}')
+
+    elif inpt in ('Classification', 'classification'):
+        models = {
+            'Logistic Regression' : LogisticRegression(),
+            'Naive bayes' : GaussianNB(),
+            'Linear SVC' : SVC(),
+            'DecisionTreeClassifier' : DecisionTreeClassifier(),
+            'RandomForestClassifier' : RandomForestClassifier()
+        }
+        DependentVar = input('Enter your output feature name : ')
+        print('Dividing your dataset in train and test split --- * ')
+        x_train , x_test , y_train , y_test = train_test_split(df.drop(DependentVar, axis =1 ), df[DependentVar] , train_size=0.7 , random_state=42)
+        for model_name , model in models.items():
+            print(f'\nModel name : {model_name} --------------------** \n')
+            model.fit(x_train , y_train)
+            y_pred = model.predict(x_test)
+            accuracy = accuracy_score(y_test  , y_pred)
+            
+            answers[model_name] = accuracy
+            print(f'\nPredicted values : {y_pred}')
+            print(f'Model evaluation')
+            print(f'Model Accuracy : {accuracy}')
+            print(f'Classification Report : \n{classification_report(y_test , y_pred)}')
+            cm = confusion_matrix(y_test, y_pred)
+            disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
+            disp.plot(cmap='viridis', values_format='d')
+            plt.title(f'Confusion Matrix - {model_name}')
+            plt.show()    
+
+                
+                
+def DatatypeHandler(df):
+    colnames = {}
+    inpp = input('Wanna change the datatype of any attribute ? Y/n ')
+    if inpp in ('Y', 'y'):
+        colnums = int(input('Enter the number of columns you wanna change name of (Numeric): '))
+        for i in range(colnums):
+            tp = input(f'Enter the name {i+1} : ')
+            dt = input('Enter the datatype to change in : ')
+            colnames[tp]= dt 
+
+        for i,j in colnames.items():
+            df[i]  = df[i].astype(j)
+    
+        print(f'Final results after changes in datatypes : ---- ** \n{df.dtypes}')
+    else :
+        print('Okaay moving to next step !!------------- ** ')
+
+
+def colremover(df):
+    agyaa = input('wanna see data feature names ? Y/n  : ')
+    if agyaa in ('y', 'Y'):
+        print(f'columns in your dataframe : \n{df.columns}\n')
+        inp = input('do you wanna drop any column from these ? Y/n  : ')
+        if inp in ('Y','y'):
+            cols = []
+            nums = int(input('Enter the number of columns to drop : '))
+            for i in range(nums):
+                name = input(f'Col {i+1} : ')
+                cols.append(name)
+            df.drop(cols,axis = 1 , inplace =True )
+            print(f'\n{cols} are permanently removed from your data ! \n')
+        else :
+            print('\nOkaay no problem moving to next step -------------- **\n')
+
 
 
        
