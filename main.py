@@ -1,7 +1,10 @@
 import pandas as pd 
-from funcs import nullRemoval, scaling , dimensionalityReduction , ModelSelection, DatatypeHandler ,colremover
+from funcs import nullRemoval, scaling , dimensionalityReduction , SupervisedModel, DatatypeHandler ,colremover , unsupervisedModel
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+# from sklearn.cluster import KMeans
+# from sklearn.metrics import silhouette_score
+# from kneed import KneeLocator
 import sys 
 arguments = sys.argv
 import matplotlib.pyplot as plt 
@@ -25,26 +28,28 @@ else:
 colremover(df)
 DatatypeHandler(df)
 
-
-inpt = input('What type of model you are trying to build ? Supervised/unsupervised : ')
-if inpt in ('Supervised', 'supervised') :
-    ls = []
-    for i, j in zip(df.isna().sum().keys() ,df.isna().sum().values ):
-        if j > 0 :
+ls = []
+for i, j in zip(df.isna().sum().keys() ,df.isna().sum().values ):
+    if j > 0 :
         # print(f'you have some missing values in column : {i} ')
-            ls.append(i)
+        ls.append(i)
     if len(ls)!= 0 :
         print(f'\n automatic cleaner detects some missing values in columns : {ls}\n')
         nullRemoval(df)
+print('for applying the ml model your data should be in a numerical format !! \n')
+    # print('We are getting the columns which have only numerical values in it ')
+ls1 = []
+for i , j in zip(df.dtypes.index ,df.dtypes.values):
+    if j != 'object':
+        ls1.append(i)
+scaling(df)
+inpt = input('What type of model you are trying to build ? Supervised/unsupervised : ')
+if inpt in ('Supervised', 'supervised') :
+    
     
 
     # numericall check ---
-    print('for applying the ml model your data should be in a numerical format !! \n')
-    # print('We are getting the columns which have only numerical values in it ')
-    ls1 = []
-    for i , j in zip(df.dtypes.index ,df.dtypes.values):
-        if j != 'object':
-            ls1.append(i)
+    
     
     print(f'our automatic cleaner detects columns which have numerical vlaues are : {ls1}')
     inp = input('Do you wanna remove columns other than this ? Y/n')
@@ -59,10 +64,16 @@ if inpt in ('Supervised', 'supervised') :
     print(f'Dimension of your data : {df.shape}')
 
     # Scaling the dataset
-    scaling(df)
-    ModelSelection(df)
+    
+    SupervisedModel(df)
 
 
+elif inpt in ('Unsupervised', 'unsupervised'):
+    dimensionalityReduction(df)
+    unsupervisedModel(df)
+    
+
+    
 
 
     # df.dropna(inplace = True)
